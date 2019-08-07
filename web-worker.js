@@ -1,22 +1,22 @@
 self.addEventListener('message', (ev) => {
-    console.log(ev.data);
-   var resMsg = HTTPreq();
+    // console.log(ev.data);
+   var resMsg = HTTPreq(ev.data);
+   if(resMsg !== "Wrong code") {
+     console.log(resMsg);
     self.postMessage('received ' +resMsg)
+   }
 })
 
-function HTTPreq() {
-    var params = JSON.stringify({
-               first: 0,
-               second: 1,
-               third: 2
-           });
+function HTTPreq(obj) {
+    var params = JSON.stringify(obj);
         var url = "https://qcvault.herokuapp.com/unlock_safe";
         var xmlHttp = new XMLHttpRequest();
          xmlHttp.open('POST', url, false);
          xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
          xmlHttp.send(params)
        var resData = xmlHttp.responseText;
-       console.log(resData);
+    
+
        return resData;
 } 
 

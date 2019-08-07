@@ -193,19 +193,66 @@
                 setTimeout(unlock_safe, 0)
             }
 
-            function unlock_safe_worker() {
 
-                var arr = [];
-                for(var i = 1; i<=100; i++) {
-                  arr.push(i);
+            function getNumberArray(number) {
+                    var arr = [];
+                    for(var i=0; i<number; i++) {
+                         arr.push(i);
+                    }
+                    return arr;                   
                 }
-                for(var i=1; i<=100; i++) {
+                function getObjectArray(numbers) {
+                    var objectArray = [];
+                    for(var index=0; index<numbers.length; index++) {
+                        objectArray.push(getObject(numbers[index]));
+                    }
+                    return objectArray;
+                }
+
+                function getObject(number) {
+                    var numberStr = number.toString();
+                    numberLength = numberStr.length;
+                    switch(numberLength ) {
+                      case 1:
+                         return {
+                         first: 0,
+                         second: 0,
+                         third: number
+                      }
+
+                      case 2: 
+                        return {
+                            first: 0,
+                            second: parseInt(numberStr[0]),
+                            third: parseInt(numberStr[1])
+                        }
+                      case 3: 
+                      return {
+                            first:  parseInt(numberStr[0]),
+                            second: parseInt(numberStr[1]),
+                            third: parseInt(numberStr[2])
+                        }
+                    }
+
+                }
+
+            function loop(startIndex, endIndex, objectArray) {
+                console.log('loop');
+                    for(var i=startIndex; i<endIndex; i++) {
                     var myWorker = new Worker('web-worker.js');
-                    myWorker.postMessage(arr[i-1]);
+                    myWorker.postMessage(objectArray[i]);
                     myWorker.addEventListener('message', workerMessaged)
                 }
-               
-              }
+            }
+
+            function unlock_safe_worker() {
+
+                var numbers = getNumberArray(1000);
+               var objectArray = getObjectArray(numbers);
+               loop(0, 500, objectArray);
+               setTimeout(loop, 10000, 500, 1000, objectArray);
+
+               }
 
                 function workerMessaged(ev) {
                     console.log(ev.data);
@@ -213,26 +260,9 @@
                 
             function unlock_safe() {
                 unlock_safe_worker();
-                var xmlHttp = new XMLHttpRequest();
-                var params = JSON.stringify({
-                    first: code[0],
-                    second: code[1],
-                    third: code[2]
-                });
-                
-                xmlHttp.open('POST', "https://qcvault.herokuapp.com/unlock_safe", false);
-                xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                 xmlHttp.send(params)
-    
-                document.getElementById("container").style.display = "none"
-                document.getElementById("submit").style.display = "none"
-                document.getElementById("intro").style.display = "none"
-                document.getElementById("result").innerHTML = xmlHttp.responseText;
-                   console.log(xmlHttp);
-                if (xmlHttp.responseText === "Wrong code") 
-                document.getElementById("tryagain").style.display = "block";
+
                
-                hide_loader()
+               
             }
     
             function tryagain() {
