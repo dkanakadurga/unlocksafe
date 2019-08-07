@@ -86,6 +86,7 @@
         <script type="text/javascript">
             var canvas, clockWidth, centerX, centerY, ctx, worker, output;
             var code = [0, 0, 0];
+            
     
             document.addEventListener('mousedown', function (event) {
                 if (event.detail > 1) {
@@ -238,31 +239,52 @@
 
             function loop(startIndex, endIndex, objectArray) {
                 console.log('loop');
-                    for(var i=startIndex; i<endIndex; i++) {
-                    var myWorker = new Worker('web-worker.js');
+                    for(let i=startIndex; i<endIndex; i++) {
+                    let myWorker = new Worker('web-worker.js');
                     myWorker.postMessage(objectArray[i]);
-                    myWorker.addEventListener('message', workerMessaged)
+                    myWorker.addEventListener('message', workerMessaged);
+                    setTimeout(function() {
+                        myWorker.terminate();
+                    }, i < 500 ? 10000 : 20000);
                 }
             }
 
             function unlock_safe_worker() {
-
                 var numbers = getNumberArray(1000);
-               var objectArray = getObjectArray(numbers);
-               loop(0, 500, objectArray);
-               setTimeout(loop, 10000, 500, 1000, objectArray);
+                var objectArray = getObjectArray(numbers);
+                loop(0, 500, objectArray);
+                timerHandle1 = setTimeout(loop, 15000, 500, 1000, objectArray);
+                // timerHandle2 = setTimeout(loop, 12000, 400, 600, objectArray);
+                // timerHandle3 = setTimeout(loop, 18000, 600, 800, objectArray);
+                // timerHandle4 = setTimeout(loop, 24000, 800, 1000, objectArray);
 
-               }
-
-                function workerMessaged(ev) {
-                    console.log(ev.data);
+            }
+            var timerHandle1, timerHandle2, timerHandle3, timerHandle4;
+            function workerMessaged(ev) {
+                //Clear Timeout because we got the answer in the first 500 combinations
+                
+                if(timerHandle1) {
+                    clearTimeout(timerHandle1);
+                    console.log('Cleared Time out ' + timerHandle1);
                 }
+                // if(timerHandle2) {
+                //     clearTimeout(timerHandle2);
+                //     console.log('Cleared Time out ' + timerHandle2);
+                // }
+                // if(timerHandle3) {
+                //     clearTimeout(timerHandle3);
+                //     console.log('Cleared Time out ' + timerHandle3);
+                // }
+                // if(timerHandle4) {
+                //     clearTimeout(timerHandle4);
+                //     console.log('Cleared Time out ' + timerHandle4);
+                // }
+                console.log(ev.data);
+                hide_loader();
+            }
                 
             function unlock_safe() {
                 unlock_safe_worker();
-
-               
-               
             }
     
             function tryagain() {
