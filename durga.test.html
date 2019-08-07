@@ -1,0 +1,261 @@
+
+<html>
+
+    <head>
+        <title>QC Test Vault</title>
+        <style type="text/css">
+            #container {
+                margin: 0 auto;
+                width: 1000px;
+                text-align: center;
+                margin-top: 0px;
+                border: none;
+                font-family: sans-serif;
+                padding-bottom: 0px;
+            }
+    
+            .text {
+                margin: 0 auto;
+                width: 1000px;
+                text-align: center;
+                margin-top: 0px;
+                border: none;
+                font-size: 14pt;
+                font-family: sans-serif;
+                padding-bottom: 0px;
+            }
+    
+            .button {
+                background-color: black;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 18px;
+                margin: 4px 2px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+    
+            #submit {
+                margin: 0 auto;
+                width: 1000px;
+                text-align: center;
+                margin-top: 0px;
+                border: none;
+                font-family: sans-serif;
+                padding-bottom: 0px;
+            }
+    
+            #result {
+                margin: 0 auto;
+                width: 1000px;
+                text-align: center;
+                margin-top: 0px;
+                border: none;
+                font-family: sans-serif;
+                padding-bottom: 0px;
+            }
+    
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 100%;
+                background: rgba(255, 255, 255, .8) url('loader.gif') 50% 50% no-repeat;
+            }
+    
+            #tryagain {
+                display: none;
+                margin: 0 auto;
+                width: 1000px;
+                text-align: center;
+                margin-top: 0px;
+                border: none;
+                font-family: sans-serif;
+                padding-bottom: 0px;
+            }
+        </style>
+        <script src="web-worker.js"></script>
+    
+        <script type="text/javascript">
+            var canvas, clockWidth, centerX, centerY, ctx, worker, output;
+            var code = [0, 0, 0];
+    
+            document.addEventListener('mousedown', function (event) {
+                if (event.detail > 1) {
+                    event.preventDefault();
+                }
+            }, false);
+    
+            function setupVaultDial(cw, id) {
+                canvas = document.getElementById(id);
+                canvas.addEventListener('click', onclick, false);
+                ctx = canvas.getContext("2d");
+                clockWidth = cw;
+                centerX = canvas.width / 2;
+                centerY = canvas.height / 2;
+                drawStaticElts();
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = 5;
+                drawHand(clockWidth / 2, 0);
+            }
+    
+            function onclick(event) {
+                var id = event.srcElement.id
+                canvas = document.getElementById(id);
+                ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawStaticElts();
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = 5;
+                var index = parseInt(id.slice(-1));
+                code[index] = (code[index] + 1) % 10;
+                drawHand(clockWidth / 2, 36 * code[index]);
+            }
+    
+            function drawStaticElts() {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, clockWidth / 2, 0, 2 * Math.PI, false);
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.closePath();
+    
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, clockWidth / 3, 0, 2 * Math.PI, false);
+                ctx.strokeStyle = "black";
+                ctx.fill();
+                ctx.closePath();
+    
+                drawNumbers();
+            }
+    
+            function drawNumbers() {
+                var i = 0;
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2;
+    
+                while (i < 10) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.translate(centerX, centerY);
+                    var angle = (i * 36) * Math.PI / 180;
+                    ctx.rotate(angle);
+                    ctx.translate(0, -clockWidth / 2);
+    
+                    ctx.save();
+                    ctx.translate(0, -10);
+                    ctx.rotate(-angle);
+                    ctx.font = "16px Verdana";
+                    ctx.fillText(i, -5, 5);
+                    ctx.restore();
+    
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, 10);
+                    ctx.stroke();
+                    ctx.closePath();
+                    ctx.restore();
+    
+                    i++;
+                }
+            }
+    
+            function drawHand(length, angle) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(-180 * Math.PI / 180);
+                ctx.rotate(angle * Math.PI / 180);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, length);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+    
+            function show_loader() {
+                document.getElementById("loader").style.overflow = "hidden";
+                document.getElementById("loader").style.display = "block";
+            }
+            function hide_loader() {
+                document.getElementById("loader").style.overflow = "";
+                document.getElementById("loader").style.display = "none";
+            }
+    
+            function submit() {
+                show_loader()
+                setTimeout(unlock_safe, 0)
+            }
+
+            function unlock_safe_worker() {
+                worker = new Worker('web-worker.js');
+                // worker.addEventListener('message', workerMessaged);
+                // worker.addEventListener('error', workerError);
+            }
+    
+            function unlock_safe() {
+                unlock_safe_worker();
+                var xmlHttp = new XMLHttpRequest();
+                var params = JSON.stringify({
+                    first: code[0],
+                    second: code[1],
+                    third: code[2]
+                });
+                
+                xmlHttp.open('POST', "https://qcvault.herokuapp.com/unlock_safe", false);
+                xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                 xmlHttp.send(params)
+    
+                document.getElementById("container").style.display = "none"
+                document.getElementById("submit").style.display = "none"
+                document.getElementById("intro").style.display = "none"
+                document.getElementById("result").innerHTML = xmlHttp.responseText;
+                   console.log(xmlHttp);
+                if (xmlHttp.responseText === "Wrong code") 
+                // document.getElementById("tryagain").style.display = "block";
+               
+                hide_loader()
+            }
+    
+            function tryagain() {
+                document.getElementById("container").style.display = "block"
+                document.getElementById("submit").style.display = "block"
+                document.getElementById("intro").style.display = "block"
+                
+                document.getElementById("tryagain").style.display = "none"
+                document.getElementById("result").innerHTML = "";
+            }
+    
+            window.onload = function () {
+                setupVaultDial(200, "qcdial0");
+                setupVaultDial(200, "qcdial1");
+                setupVaultDial(200, "qcdial2");
+            };
+        </script>
+    </head>
+    
+    <body id="main">
+        <div id="intro" class="text">The code changes every minute. The system takes 5 seconds to verify the code. Find the code.<br>Expected solution finds the code under 10 seconds.</div>
+        <div id="container">
+            <canvas id="qcdial0" width="300" height="300"></canvas>
+            <canvas id="qcdial1" width="300" height="300"></canvas>
+            <canvas id="qcdial2" width="300" height="300"></canvas>
+        </div>
+        <div id="submit">
+            <input type="button" class="button" value="UNLOCK VAULT" onclick="submit()">
+        </div>
+    
+        <div id="result" class="text"></div>
+        <div id="tryagain">
+            <input type="button" class="button" value="TRY AGAIN" onclick="tryagain()">
+        </div>
+    </body>
+    <div id="loader" class="modal"></div>
+    
+    </html>
