@@ -1,5 +1,4 @@
 self.addEventListener('message', (ev) => {
-    // console.log(ev.data);
    var resMsg = HTTPreq(ev.data);
    if(resMsg !== "Wrong code") {
       console.log(resMsg);

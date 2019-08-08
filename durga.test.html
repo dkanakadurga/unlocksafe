@@ -194,7 +194,7 @@
                 setTimeout(unlock_safe, 0)
             }
 
-
+         //Preparing the number(code)
             function getNumberArray(number) {
                     var arr = [];
                     for(var i=0; i<number; i++) {
@@ -248,17 +248,13 @@
                     }, i < 500 ? 10000 : 20000);
                 }
             }
-
+           //posting codes to web-worker
             function unlock_safe_worker() {
                 var numbers = getNumberArray(1000);
                 var objectArray = getObjectArray(numbers);
                 loop(0, 500, objectArray);
-                timerHandle1 = setTimeout(loop, 15000, 500, 1000, objectArray);
-                // timerHandle2 = setTimeout(loop, 12000, 400, 600, objectArray);
-                // timerHandle3 = setTimeout(loop, 18000, 600, 800, objectArray);
-                // timerHandle4 = setTimeout(loop, 24000, 800, 1000, objectArray);
-
-            }
+                timerHandle1 = setTimeout(loop, 12000, 500, 1000, objectArray);
+               }
             var timerHandle1, timerHandle2, timerHandle3, timerHandle4;
             function workerMessaged(ev) {
                 //Clear Timeout because we got the answer in the first 500 combinations
@@ -267,18 +263,7 @@
                     clearTimeout(timerHandle1);
                     console.log('Cleared Time out ' + timerHandle1);
                 }
-                // if(timerHandle2) {
-                //     clearTimeout(timerHandle2);
-                //     console.log('Cleared Time out ' + timerHandle2);
-                // }
-                // if(timerHandle3) {
-                //     clearTimeout(timerHandle3);
-                //     console.log('Cleared Time out ' + timerHandle3);
-                // }
-                // if(timerHandle4) {
-                //     clearTimeout(timerHandle4);
-                //     console.log('Cleared Time out ' + timerHandle4);
-                // }
+              
                 console.log(ev.data);
                 hide_loader();
             }
